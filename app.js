@@ -280,5 +280,8 @@
       if(bytes){await bootReader(bytes,true);$("importBtnText").textContent="Trocar EPUB";}
     }catch(e){if(state.seen)notify("Importe seu EPUB para retomar a leitura.");}
   }
+  if ('serviceWorker' in navigator && location.protocol==='https:') {
+    window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js').catch(()=>{}));
+  }
   init();
 })();
