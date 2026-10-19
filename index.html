@@ -12,6 +12,7 @@
 <link rel="stylesheet" href="style.css">
 <script defer src="https://cdn.jsdelivr.net/npm/epubjs@0.3.93/dist/epub.min.js"></script>
 <script defer src="studies.js"></script>
+<script defer src="reading.js"></script>
 <script defer src="app.js"></script>
 </head>
 <body>
@@ -29,21 +30,25 @@
 </aside>
 <div id="backdrop" class="backdrop" hidden></div>
 <div class="main-area">
- <header class="topbar"><div class="topbar-left"><button class="icon-btn hamburger" id="openNav" aria-label="Abrir menu">☰</button><div><div class="eyebrow" id="eyebrow">GRUPO DE ESTUDOS · ENCONTRO 01</div><div class="top-title" id="topTitle">A ideologia como força material</div></div></div><div class="top-actions"><div class="segmented" title="Aparência"><button id="lightMode" class="seg active" aria-label="Tema claro" title="Tema claro">☼</button><button id="darkMode" class="seg" aria-label="Tema escuro" title="Tema escuro">☾</button></div><button id="importBtn" class="outline small-btn">↥ <span id="importBtnText">Importar EPUB</span></button><input type="file" id="epubInput" accept=".epub,application/epub+zip" hidden></div></header>
+ <header class="topbar"><div class="topbar-left"><button class="icon-btn hamburger" id="openNav" aria-label="Abrir menu">☰</button><div><div class="eyebrow" id="eyebrow">LIVRO INTERATIVO · CAPÍTULO 01</div><div class="top-title" id="topTitle">A ideologia como força material</div></div></div><div class="top-actions"><div class="segmented" title="Aparência"><button id="lightMode" class="seg active" aria-label="Tema claro" title="Tema claro">☼</button><button id="darkMode" class="seg" aria-label="Tema escuro" title="Tema escuro">☾</button></div><button id="importBtn" class="outline small-btn" title="Abrir sua edição integral do livro">↥ <span id="importBtnText">Meu EPUB</span></button><input type="file" id="epubInput" accept=".epub,application/epub+zip" hidden></div></header>
  <div class="content-scroll">
  <section class="intro" id="intro">
- <div class="intro-copy"><div class="hero-tag"><i></i> SEU GRUPO DE LEITURA</div><h1>Uma leitura.<br><em>Muitas perguntas.</em></h1><p>Um espaço para estudar <strong>Psicologia de Massas do Fascismo</strong> diretamente no texto, com conceitos, debates e exercícios — no seu próprio ritmo.</p><div class="hero-actions"><button id="heroImport" class="primary">↥ &nbsp; Abrir meu EPUB <span>→</span></button><button id="heroExplore" class="text-btn">Conhecer o roteiro ↘</button></div><div class="privacy-note">◎ Seu EPUB fica apenas no dispositivo. Nada é publicado ou enviado.</div></div>
+ <div class="intro-copy"><div class="hero-tag"><i></i> LIVRO INTERATIVO · 13 CAPÍTULOS</div><h1>Leia. Pense.<br><em>Questione.</em></h1><p><strong>Psicologia de Massas do Fascismo</strong> em uma experiência de estudo feita para o celular: leitura comentada, conceitos, perguntas no meio do texto, anotações e quizzes. É só abrir e começar.</p><div class="hero-actions"><button id="heroExplore" class="primary">Começar a leitura <span>→</span></button><button id="heroImport" class="text-btn">Tenho o EPUB integral ↗</button></div><div class="privacy-note">◎ A leitura comentada já está no aplicativo. Para consultar o texto integral, importe sua edição uma única vez: ela ficará guardada apenas no dispositivo.</div></div>
  <div class="hero-art"><div class="art-top">BIBLIOTECA DE ESTUDOS <span>01 — 13</span></div><div class="art-circle"><span>W<span class="dot">.</span>R</span></div><div class="art-book"><div class="art-rule"></div><div class="art-h">PSICOLOGIA<br>DE MASSAS<br>DO FASCISMO</div><div class="art-by">WILHELM REICH</div></div><div class="art-bottom">LEITURA · ANÁLISE · DEBATE</div></div>
  </section>
  <section class="reader-layout" id="readerLayout" hidden>
  <div class="reader-main">
+ <div class="reading-switch" role="group" aria-label="Modo de leitura"><button id="modeInteractive" class="reading-switch-btn active" aria-pressed="true">✦ Leitura interativa</button><button id="modeOriginal" class="reading-switch-btn" aria-pressed="false">▤ Minha edição integral</button></div>
+ <div id="interactiveReader" class="interactive-reader" aria-label="Capítulo interativo"></div>
+ <div id="epubReaderPanel" hidden>
  <div class="section-caption"><span class="caption-mark"></span><span id="readerCaption">LEITURA DO TEXTO ORIGINAL</span><div class="caption-right"><button id="fontMinus" title="Diminuir fonte" class="micro-btn" aria-label="Diminuir fonte">A−</button><span id="fontLabel">100%</span><button id="fontPlus" title="Aumentar fonte" class="micro-btn" aria-label="Aumentar fonte">A+</button></div></div>
  <div class="book-frame"><div id="reader" aria-label="Texto do livro EPUB"></div></div>
  <div class="reader-bottom"><button id="prevPage" class="page-btn">← Anterior</button><div id="pageStatus">Página —</div><button id="nextPage" class="page-btn">Próxima →</button></div>
- <p class="selection-tip">Selecione um trecho do livro para destacá-lo. Os destaques aparecem na aba <strong>Caderno</strong>.</p>
+ <p class="selection-tip">Selecione um trecho da sua edição para destacá-lo. Seus comentários ficarão na aba <strong>Caderno</strong>.</p>
+ </div>
  </div>
  <div class="study-main">
- <div class="tabs" role="tablist" aria-label="Ferramentas de estudo"><button class="tab active" data-tab="guide" role="tab" aria-selected="true">Estudo guiado</button><button class="tab" data-tab="practice" role="tab" aria-selected="false">Exercícios</button><button class="tab" data-tab="notes" role="tab" aria-selected="false">Caderno <span id="noteCount">0</span></button></div>
+ <div class="tabs" role="tablist" aria-label="Ferramentas de estudo"><button class="tab active" data-tab="guide" role="tab" aria-selected="true">Conceitos</button><button class="tab" data-tab="practice" role="tab" aria-selected="false">Exercícios</button><button class="tab" data-tab="notes" role="tab" aria-selected="false">Caderno <span id="noteCount">0</span></button></div>
  <div class="study-body">
   <div id="guidePane" class="tab-pane" role="tabpanel"><div class="guide-head"><div class="guide-kicker" id="guideKicker">ENCONTRO 01 · CONTEXTO</div><h2 id="guideTitle">A ideologia como força material</h2><p id="guideLead"></p></div><div class="divider-label">CONCEITOS PARA EXPLORAR <span>TOQUE PARA ABRIR</span></div><div id="conceptCards" class="concept-cards"></div><div class="debate-box"><span class="debate-icon">?</span><div><div class="debate-title">NOSSA PERGUNTA DE DEBATE</div><p id="debateQuestion"></p><button id="debateToNotes" class="inline-link">Registrar minha reflexão ↗</button></div></div><div class="reading-disclaimer">Notas interpretativas de estudo; não substituem o texto original nem representam comprovação das hipóteses de Reich.</div></div>
   <div id="practicePane" class="tab-pane" role="tabpanel" hidden><div class="guide-kicker">REVISÃO ATIVA</div><h2>Vamos conferir a leitura?</h2><p class="pane-intro">Responda, veja a explicação e avance. Você pode refazer quantas vezes quiser.</p><div id="quizList"></div></div>
@@ -52,7 +57,7 @@
  <div class="chapter-footer"><button id="prevChapter" class="chapter-footer-btn">← Anterior</button><button id="completeChapter" class="mark-btn">✓ Marcar estudado</button><button id="nextChapter" class="chapter-footer-btn">Próximo →</button></div>
  </div>
  </section>
- <div class="footer-text">CÍRCULO REICH <span>·</span> PENSAR COM O TEXTO, NÃO APENAS SOBRE ELE</div>
+ <div class="footer-text">CÍRCULO REICH <span>·</span> ADAPTAÇÃO DIDÁTICA ORIGINAL · TEXTO INTEGRAL APENAS NO SEU DISPOSITIVO</div>
  </div>
 </div>
 </div>
