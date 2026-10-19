@@ -61,7 +61,7 @@
     cover.append(el("div","reading-kicker","CÍRCULO REICH / CAPÍTULO "+formatNumber(s.n)));
     cover.append(el("h1","reading-title",s.title));
     cover.append(el("p","reading-intro",s.intro));
-    const note=el("div","reading-source","Os parágrafos comentados são nossos. Para ler as palavras exatas de Reich, abra «Texto original de Reich» dentro de cada seção após importar seu EPUB.");
+    const note=el("div","reading-source","Material de estudo e interpretação. Leia o texto original no seu livro físico; depois revise aqui os conceitos e responda às atividades.");
     cover.append(note);
     panel.append(cover);
     const unlocked=window.REICH_FULL_BOOK && window.REICH_FULL_BOOK.chapters[state.chapter];
@@ -86,7 +86,7 @@
         panel.append(back);
       }
     }else{
-      const msg=el("div","reading-unlock-note","▣ O texto integral está protegido por senha. Use “Minha biblioteca particular” acima para desbloqueá-lo. Nossas interpretações seguem disponíveis abaixo.");
+      const msg=el("div","reading-unlock-note","◈ Leia a seção no seu livro físico e use as atividades abaixo para discutir as ideias e revisar o que aprendeu.");
       panel.append(msg);
     }
     const mini=el("nav","reading-minitoc");mini.setAttribute("aria-label","Seções deste capítulo");
@@ -102,7 +102,7 @@
       article.append(el("div","reading-section-tag",section.tag));
       article.append(el("h2","reading-section-title",section.h));
       for(const p of section.p)article.append(el("p","reading-paragraph",p));
-      article.append(makeOriginalExcerptControl(state.chapter,i,section.h,s.sections.length));
+      if(book)article.append(makeOriginalExcerptControl(state.chapter,i,section.h,s.sections.length));
       const c=studies[state.chapter]?.concepts?.[i%3];
       if(c){
         const details=el("details","reading-concept");
@@ -607,7 +607,7 @@
     window.addEventListener("resize",()=>{clearTimeout(resizing);resizing=setTimeout(()=>{try{rendition&&rendition.resize();}catch(e){}},220);});
   }
   async function init(){
-    bind();renderNav();applyTheme();applyFont();setReadingMode(state.mode);
+    bind();renderNav();applyTheme();applyFont();setReadingMode("interactive");
     if(state.seen){showReader();renderGuide();showEmptyBook();}else{showWelcome();}
     try{
       const bytes=await storedBook();
