@@ -7,7 +7,7 @@ const root = new URL("../", import.meta.url);
 const read = file => readFileSync(new URL(file,root),"utf8");
 
 test("O código JavaScript tem sintaxe válida", () => {
-  for (const file of ["app.js","studies.js","sw.js"]) assert.doesNotThrow(() => new vm.Script(read(file),{filename:file}));
+  for (const file of ["app.js","studies.js","reading.js","sw.js"]) assert.doesNotThrow(() => new vm.Script(read(file),{filename:file}));
 });
 
 test("O guia possui 13 capítulos completos e 26 perguntas", () => {
@@ -39,6 +39,10 @@ test("HTML declara componentes e conteúdo privado", () => {
     assert.ok(html.includes('id="'+id+'"'),"Elemento ausente: "+id);
   }
   assert.ok(html.includes('src="studies.js"'));
+  assert.ok(html.includes('src="reading.js"'));
+  assert.ok(html.includes('id="interactiveReader"'));
+  assert.ok(html.includes('id="modeOriginal"'));
+  assert.ok(html.includes('id="flashcardBox"'));
   assert.ok(html.includes('src="app.js"'));
   assert.ok(!html.includes("book-data.js"));
 });
@@ -48,4 +52,30 @@ test("Manifesto de aplicativo é válido", () => {
   assert.equal(manifest.display,"standalone");
   assert.equal(manifest.lang,"pt-BR");
   assert.ok(manifest.icons.length>0);
+});
+
+test("Leitura integrada possui 13 capítulos e perguntas de reflexão", () => {
+  const context={window:{}};
+  vm.createContext(context);
+  vm.runInContext(read("reading.js"),context);
+  const chapters=context.window.REICH_READING;
+  assert.equal(chapters.length,13);
+  for(const chapter of chapters){
+    assert.ok(chapter.title.length>10);
+    assert.ok(chapter.intro.length>80);
+    assert.ok(chapter.sections.length>=2);
+    for(const section of chapter.sections){
+      assert.ok(section.p.length>=2);
+      assert.ok(section.p.every(p=>p.length>=100));
+      assert.ok(section.pause.endsWith("?"));
+    }
+  }
+});
+test("Releitura pessoal mantém separação entre conteúdo público e EPUB", () => {
+  const src=read("app.js");
+  assert.ok(src.includes('indexedDB.open('));
+  assert.ok(src.includes('setReadingMode('));
+  assert.ok(src.includes('renderInteractive()'));
+  assert.ok(src.includes('renderFlashcards()'));
+  assert.ok(!read("index.html").includes('book-data.js'));
 });
