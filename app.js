@@ -6,7 +6,7 @@
   const KEY = "circulo-reich-notas-v1";
   const DB_NAME = "circulo-reich-livro";
   const FILE_STORE = "files";
-  const defaults = {theme:"light",font:100,chapter:0,completed:{},notes:{},answers:{},highlights:[],cfi:null,seen:false,filename:null};
+  const defaults = {theme:"light",font:100,chapter:0,mode:"interactive",reflections:{},completed:{},notes:{},answers:{},highlights:[],cfi:null,seen:false,filename:null};
   let state = loadState();
   let book = null, rendition = null, chapterHrefs = [], chapterSpines = [], toc = [], bookPercent = 0, noteTimer = 0, toastTimer = 0, resizing = 0, restoring = false;
   function loadState(){try{return Object.assign({},defaults,JSON.parse(localStorage.getItem(KEY)||"{}"));}catch(e){return Object.assign({},defaults);}}
@@ -38,9 +38,109 @@
     $("progressLabel").textContent=p+"%";$("progressFill").style.width=p+"%";
     $("progressDetail").textContent=done+" de "+studies.length+" capítulos estudados"+(book&&bookPercent>0?" · "+Math.round(bookPercent*100)+"% lido":"");
   }
+  function setReadingMode(mode){
+    state.mode=mode==="original"?"original":"interactive";
+    $("interactiveReader").hidden=state.mode!=="interactive";
+    $("epubReaderPanel").hidden=state.mode!=="original";
+    $("modeInteractive").classList.toggle("active",state.mode==="interactive");
+    $("modeOriginal").classList.toggle("active",state.mode==="original");
+    $("modeInteractive").setAttribute("aria-pressed",String(state.mode==="interactive"));
+    $("modeOriginal").setAttribute("aria-pressed",String(state.mode==="original"));
+    if(state.mode==="original"&&!book)showEmptyBook();
+    if(state.mode==="original"&&rendition){setTimeout(()=>{try{rendition.resize();}catch(e){}},100);}
+    persist();
+  }
+  function renderInteractive(){
+    const s=(window.REICH_READING||[])[state.chapter];
+    const panel=$("interactiveReader");
+    panel.textContent="";
+    if(!s){panel.textContent="Não foi possível carregar o capítulo interativo.";return;}
+    const el=(tag,cls,txt)=>{const n=document.createElement(tag);if(cls)n.className=cls;if(txt!==undefined)n.textContent=txt;return n;};
+    const cover=el("header","reading-chapter-cover");
+    cover.append(el("div","reading-kicker","CÍRCULO REICH / CAPÍTULO "+formatNumber(s.n)));
+    cover.append(el("h1","reading-title",s.title));
+    cover.append(el("p","reading-intro",s.intro));
+    const note=el("div","reading-source","Leitura comentada original baseada nas ideias de Reich. Não é transcrição da obra. Sua edição integral pode ser aberta na aba ao lado.");
+    cover.append(note);
+    panel.append(cover);
+    const mini=el("nav","reading-minitoc");mini.setAttribute("aria-label","Seções deste capítulo");
+    mini.append(el("div","reading-small-label","NESTE CAPÍTULO"));
+    s.sections.forEach((section,i)=>{
+      const link=el("button","reading-mini-link",formatNumber(i+1)+" · "+section.h);
+      link.type="button";link.addEventListener("click",()=>{const target=$("textsec-"+i);if(target)target.scrollIntoView({behavior:"smooth",block:"start"});});
+      mini.append(link);
+    });
+    panel.append(mini);
+    s.sections.forEach((section,i)=>{
+      const article=el("section","reading-section");article.id="textsec-"+i;
+      article.append(el("div","reading-section-tag",section.tag));
+      article.append(el("h2","reading-section-title",section.h));
+      for(const p of section.p)article.append(el("p","reading-paragraph",p));
+      const c=studies[state.chapter]?.concepts?.[i%3];
+      if(c){
+        const details=el("details","reading-concept");
+        const summary=el("summary","","⊕  Entenda o conceito: "+c[0]);
+        details.append(summary,el("p","",c[1]));article.append(details);
+      }
+      const pause=el("div","reading-pause");
+      const h=el("div","reading-pause-heading","✦  PAUSA PARA PENSAR");
+      const question=el("p","reading-pause-question",section.pause);
+      const key=state.chapter+"-"+i;
+      const box=el("textarea","reading-reflection");
+      box.placeholder="Escreva sua interpretação. Sua resposta ficará salva no dispositivo.";
+      box.rows=3;box.setAttribute("aria-label","Sua reflexão sobre: "+section.pause);
+      box.value=(state.reflections||{})[key]||"";
+      const saved=el("div","reading-reflection-save",box.value?"✓ Reflexão guardada":"Anotações salvas automaticamente");
+      let delay;
+      box.addEventListener("input",()=>{saved.textContent="Salvando…";clearTimeout(delay);delay=setTimeout(()=>{state.reflections=state.reflections||{};state.reflections[key]=box.value;persist();saved.textContent="✓ Reflexão guardada";},260);});
+      pause.append(h,question,box,saved);article.append(pause);
+      panel.append(article);
+    });
+    const check=el("section","reading-selfcheck");
+    check.append(el("div","reading-section-tag","PARA FIXAR"));
+    check.append(el("h2","reading-section-title","Você consegue explicar?"));
+    check.append(el("p","reading-paragraph","Responda sem consultar suas anotações. Depois confira a explicação."));
+    for(let i=0;i<(studies[state.chapter]?.quiz||[]).length;i++){
+      const quiz=studies[state.chapter].quiz[i];
+      const key=studies[state.chapter].id+"-"+i;
+      const saved=state.answers[key];
+      const card=el("div","reading-check-card");
+      card.append(el("div","reading-small-label","QUESTÃO "+formatNumber(i+1)));
+      card.append(el("p","reading-check-prompt",quiz[0]));
+      quiz[1].forEach((option,j)=>{
+        const button=el("button","reading-check-option",String.fromCharCode(65+j)+". "+option);
+        button.type="button";
+        if(saved!==undefined){button.disabled=true;if(j===quiz[2])button.classList.add("correct");else if(j===saved)button.classList.add("wrong");}
+        button.addEventListener("click",()=>{state.answers[key]=j;persist();renderInteractive();renderQuizzes();const card2=$("readingQuiz-"+i);if(card2)card2.scrollIntoView({behavior:"smooth",block:"center"});});
+        card.append(button);
+      });
+      if(saved!==undefined){
+        card.append(el("p","reading-check-feedback",(saved===quiz[2]?"✓ Correto. ":"Vale revisar. ")+quiz[3]));
+        const reset=el("button","reading-reset","↻ Refazer");reset.type="button";
+        reset.addEventListener("click",()=>{delete state.answers[key];persist();renderInteractive();renderQuizzes();});
+        card.append(reset);
+      }
+      card.id="readingQuiz-"+i;
+      check.append(card);
+    }
+    panel.append(check);
+    const foot=el("div","reading-finish");
+    foot.append(el("p","","Chegou ao fim deste capítulo? Registre o encontro no seu percurso."));
+    const done=!!state.completed[s.n];
+    const btn=el("button","reading-finish-btn",done?"✓ Capítulo estudado — desfazer":"✓ Concluir este capítulo");
+    btn.type="button";
+    btn.addEventListener("click",()=>{state.completed[s.n]=!state.completed[s.n];persist();renderNav();renderComplete();renderInteractive();notify(state.completed[s.n]?"Capítulo concluído.":"Marcação desfeita.");});
+    foot.append(btn);
+    const nxt=el("button","reading-next","Próximo capítulo →");
+    nxt.type="button";nxt.disabled=state.chapter===studies.length-1;
+    nxt.addEventListener("click",()=>openChapter(state.chapter+1,true));
+    foot.append(nxt);
+    panel.append(foot);
+  }
   function renderGuide(){
     const s=studies[state.chapter];if(!s)return;
-    $("eyebrow").textContent="GRUPO DE ESTUDOS · ENCONTRO "+formatNumber(s.id);
+    renderInteractive();
+    $("eyebrow").textContent="LIVRO INTERATIVO · CAPÍTULO "+formatNumber(s.id);
     $("topTitle").textContent=s.title;
     $("guideKicker").textContent="ENCONTRO "+formatNumber(s.id)+" · "+s.tag.toUpperCase();
     $("guideTitle").textContent=s.title;
@@ -108,11 +208,11 @@
   }
   function openChapter(i,navigate){
     state.chapter=Math.max(0,Math.min(studies.length-1,i));showReader();renderGuide();
-    if(book && rendition && navigate){
+    if(book && rendition && navigate && state.mode==="original"){
       const href=chapterHrefs[state.chapter];
       if(href)rendition.display(href).catch(()=>notify("Não foi possível abrir este capítulo no EPUB."));
     }else if(!book)showEmptyBook();
-    if(window.innerWidth<990 && navigate)window.scrollTo({top:0,behavior:"smooth"});
+    if(navigate)window.scrollTo({top:0,behavior:"smooth"});
     persist();
   }
   function showEmptyBook(){
@@ -185,7 +285,9 @@
   async function bootReader(bytes,restore){
     if(typeof window.ePub!=="function")throw new Error("O leitor ePub.js não carregou. Verifique a conexão com a internet.");
     restoring=true;
+    const intendedMode=state.mode;
     showReader();
+    setReadingMode("original");
     await new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)));
     if(rendition){try{rendition.destroy();}catch(e){}}
     if(book){try{book.destroy();}catch(e){}}
@@ -206,7 +308,7 @@
     applyTheme();applyFont();
     let target=restore&&state.cfi?state.cfi:chapterHrefs[state.chapter]||undefined;
     try{await rendition.display(target);}catch(e){await rendition.display();}
-    showReader();renderGuide();restoring=false;notify("Livro pronto. Boa leitura!");
+    showReader();renderGuide();restoring=false;setReadingMode(intendedMode);notify("Livro integral disponível para leitura neste dispositivo.");
     setTimeout(()=>{if(book)book.locations.generate(1200).then(()=>{const current=rendition.currentLocation();if(current)rememberLocation(current);}).catch(()=>{});},800);
   }
   async function receiveEpub(file){
@@ -254,13 +356,15 @@
     $("openNav").addEventListener("click",()=>{$("sidebar").classList.add("open");$("backdrop").hidden=false;});
     $("closeNav").addEventListener("click",closeNav);$("backdrop").addEventListener("click",closeNav);
     ["importBtn","heroImport"].forEach(id=>$(id).addEventListener("click",()=>$("epubInput").click()));
-    $("heroExplore").addEventListener("click",()=>openChapter(state.chapter,false));
+    $("heroExplore").addEventListener("click",()=>{setReadingMode("interactive");openChapter(state.chapter,false);});
+    $("modeInteractive").addEventListener("click",()=>setReadingMode("interactive"));
+    $("modeOriginal").addEventListener("click",()=>setReadingMode("original"));
     $("epubInput").addEventListener("change",e=>receiveEpub(e.target.files[0]));
     $("prevPage").addEventListener("click",()=>rendition?rendition.prev():notify("Importe o EPUB para ler o texto."));
     $("nextPage").addEventListener("click",()=>rendition?rendition.next():notify("Importe o EPUB para ler o texto."));
     $("prevChapter").addEventListener("click",()=>openChapter(state.chapter-1,true));
     $("nextChapter").addEventListener("click",()=>openChapter(state.chapter+1,true));
-    $("completeChapter").addEventListener("click",()=>{const id=studies[state.chapter].id;state.completed[id]=!state.completed[id];persist();renderComplete();renderNav();notify(state.completed[id]?"Capítulo marcado como estudado.":"Marcação retirada.");});
+    $("completeChapter").addEventListener("click",()=>{const id=studies[state.chapter].id;state.completed[id]=!state.completed[id];persist();renderComplete();renderNav();renderInteractive();notify(state.completed[id]?"Capítulo marcado como estudado.":"Marcação retirada.");});
     $("chapterNotes").addEventListener("input",e=>{const s=studies[state.chapter];state.notes[s.id]=e.target.value;$("saveStatus").textContent="Salvando…";clearTimeout(noteTimer);noteTimer=setTimeout(()=>{persist();$("saveStatus").textContent="✓ Salvo neste navegador";},300);});
     $("debateToNotes").addEventListener("click",()=>{setTab("notes");$("chapterNotes").focus();});
     document.querySelectorAll(".tab").forEach(b=>b.addEventListener("click",()=>setTab(b.dataset.tab)));
@@ -275,7 +379,7 @@
     window.addEventListener("resize",()=>{clearTimeout(resizing);resizing=setTimeout(()=>{try{rendition&&rendition.resize();}catch(e){}},220);});
   }
   async function init(){
-    bind();renderNav();applyTheme();applyFont();
+    bind();renderNav();applyTheme();applyFont();setReadingMode(state.mode);
     if(state.seen){showReader();renderGuide();showEmptyBook();}else{showWelcome();}
     try{
       const bytes=await storedBook();
