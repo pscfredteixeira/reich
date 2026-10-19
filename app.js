@@ -6,8 +6,9 @@
   const KEY = "circulo-reich-notas-v1";
   const DB_NAME = "circulo-reich-livro";
   const FILE_STORE = "files";
-  const defaults = {theme:"light",font:100,chapter:0,mode:"interactive",reflections:{},completed:{},notes:{},answers:{},highlights:[],cfi:null,seen:false,filename:null};
+  const defaults = {theme:"light",font:100,chapter:0,mode:"interactive",reflections:{},cards:{},completed:{},notes:{},answers:{},highlights:[],cfi:null,seen:false,filename:null};
   let state = loadState();
+  let currentCard = 0, cardFlipped = false;
   let book = null, rendition = null, chapterHrefs = [], chapterSpines = [], toc = [], bookPercent = 0, noteTimer = 0, toastTimer = 0, resizing = 0, restoring = false;
   function loadState(){try{return Object.assign({},defaults,JSON.parse(localStorage.getItem(KEY)||"{}"));}catch(e){return Object.assign({},defaults);}}
   function persist(){try{localStorage.setItem(KEY,JSON.stringify(state));}catch(e){notify("O navegador está sem espaço para guardar as notas.");}}
@@ -160,7 +161,7 @@
     });
     $("chapterNotes").value=state.notes[s.id]||"";
     $("saveStatus").textContent="Salvo automaticamente no navegador";
-    renderQuizzes();renderHighlights();renderComplete();renderNav();
+    renderQuizzes();currentCard=0;cardFlipped=false;renderFlashcards();renderHighlights();renderComplete();renderNav();
     $("prevChapter").disabled=state.chapter===0;
     $("nextChapter").disabled=state.chapter===studies.length-1;
   }
@@ -184,6 +185,34 @@
       }
       host.append(outer);
     });
+  }
+  function renderFlashcards(){
+    const host=$("flashcardBox");host.textContent="";
+    const concepts=studies[state.chapter]?.concepts||[];
+    if(!concepts.length)return;
+    currentCard=Math.max(0,Math.min(concepts.length-1,currentCard));
+    const score=concepts.filter((x,i)=>state.cards[studies[state.chapter].id+"-"+i]==="known").length;
+    const label=document.createElement("div");label.className="flashcard-progress";
+    label.textContent="CARTÃO "+(currentCard+1)+" DE "+concepts.length+"   ·   "+score+" DOMINADO"+(score===1?"":"S");
+    const flash=document.createElement("button");flash.className="flashcard";flash.type="button";flash.setAttribute("aria-label","Virar cartão: "+concepts[currentCard][0]);
+    const caption=document.createElement("div");caption.className="flashcard-caption";caption.textContent=cardFlipped?"VERSO · EXPLICAÇÃO":"FRENTE · CONCEITO";
+    const body=document.createElement("div");body.className="flashcard-body";body.textContent=cardFlipped?concepts[currentCard][1]:concepts[currentCard][0];
+    const tip=document.createElement("div");tip.className="flashcard-tip";tip.textContent="↻ Toque para virar";
+    flash.append(caption,body,tip);
+    flash.addEventListener("click",()=>{cardFlipped=!cardFlipped;renderFlashcards();});
+    const controls=document.createElement("div");controls.className="flashcard-controls";
+    const back=document.createElement("button");back.type="button";back.textContent="← Anterior";
+    back.disabled=currentCard===0;
+    back.addEventListener("click",()=>{currentCard--;cardFlipped=false;renderFlashcards();});
+    const known=document.createElement("button");known.type="button";known.className="flashcard-know";known.textContent="✓ Sei explicar";
+    known.addEventListener("click",()=>{state.cards=state.cards||{};state.cards[studies[state.chapter].id+"-"+currentCard]="known";persist();if(currentCard<concepts.length-1){currentCard++;cardFlipped=false;}renderFlashcards();});
+    const next=document.createElement("button");next.type="button";next.textContent="Próximo →";
+    next.disabled=currentCard===concepts.length-1;
+    next.addEventListener("click",()=>{currentCard++;cardFlipped=false;renderFlashcards();});
+    controls.append(back,known,next);
+    const reset=document.createElement("button");reset.type="button";reset.className="flashcard-reset";reset.textContent="↻ Reiniciar avaliação deste capítulo";
+    reset.addEventListener("click",()=>{concepts.forEach((_,i)=>delete state.cards[studies[state.chapter].id+"-"+i]);currentCard=0;cardFlipped=false;persist();renderFlashcards();});
+    host.append(label,flash,controls,reset);
   }
   function renderComplete(){
     const isDone=!!state.completed[studies[state.chapter].id],b=$("completeChapter");
@@ -328,7 +357,7 @@
     finally{$("importBtnText").textContent="Trocar EPUB";$("epubInput").value="";}
   }
   function setTab(tab){
-    ["guide","practice","notes"].forEach(k=>{
+    ["guide","practice","cards","notes"].forEach(k=>{
       $(k+"Pane").hidden=k!==tab;
       const el=document.querySelector('[data-tab="'+k+'"]');el.classList.toggle("active",k===tab);el.setAttribute("aria-selected",String(k===tab));
     });
