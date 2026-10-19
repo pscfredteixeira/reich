@@ -104,3 +104,7 @@ body.dark .flashcard-body,body.dark .flashcard-caption,body.dark .flashcard-tip{
 .reading-intro{font-size:calc(16px * var(--reader-scale,1))}
 .reading-pause-question{font-size:calc(16px * var(--reader-scale,1))}
 @media(max-width:650px){.reading-paragraph{font-size:calc(16px * var(--reader-scale,1))}}
+
+.reading-debate-copy{display:block;margin-top:13px;border:1px solid #b6bea7;background:#fffdf6;color:#506c4c;border-radius:6px;padding:10px 12px;font-size:11px;text-align:left;font-weight:700;width:100%;line-height:1.4}
+.reading-debate-copy:hover{border-color:#789774}
+body.dark .reading-debate-copy{background:#374a3b;color:#e1efdc}
