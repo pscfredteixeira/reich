@@ -185,6 +185,8 @@
   async function bootReader(bytes,restore){
     if(typeof window.ePub!=="function")throw new Error("O leitor ePub.js não carregou. Verifique a conexão com a internet.");
     restoring=true;
+    showReader();
+    await new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)));
     if(rendition){try{rendition.destroy();}catch(e){}}
     if(book){try{book.destroy();}catch(e){}}
     $("reader").textContent="";
