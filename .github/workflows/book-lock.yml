@@ -4,6 +4,7 @@ on:
   push:
     paths:
       - '.github/workflows/book-lock.yml'
+      - 'scripts/build_locked.py'
 permissions:
   contents: write
 jobs:
