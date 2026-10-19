@@ -1,0 +1,55 @@
+name: Preparar livro protegido por senha
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - '.github/workflows/book-lock.yml'
+permissions:
+  contents: write
+jobs:
+  encrypt:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Código do aplicativo (sem texto do livro)
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          persist-credentials: true
+      - name: Texto original do ramo privado (não publicado)
+        uses: actions/checkout@v4
+        with:
+          ref: conteudo-privado
+          path: fonte-privada
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Preparar biblioteca de criptografia
+        run: python -m pip install 'cryptography>=43,<49'
+      - name: Gerar pacote AES-256-GCM e senha particular
+        run: python scripts/build_locked.py fonte-privada/conteudo/original book.lock
+      - name: Guardar senha em artefato PRIVADO do GitHub Actions
+        uses: actions/upload-artifact@v4
+        with:
+          name: senha-circulo-reich
+          path: senha-circulo-reich.txt
+          retention-days: 30
+          if-no-files-found: error
+      - name: Publicar SOMENTE o arquivo cifrado no ramo main
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -- book.lock
+          if git diff --cached --quiet; then exit 0; fi
+          git commit -m 'build: atualizar livro cifrado [skip ci]'
+          git push origin HEAD:main
+      - name: Confirmar proteção
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          data=json.loads(Path('book.lock').read_text())
+          assert data['format']=='reich-aes256-gcm-v1'
+          assert 'Capitulo I' not in Path('book.lock').read_text()
+          print('OK: apenas conteúdo cifrado publicado; a senha não foi exibida nos logs.')
+          PY
