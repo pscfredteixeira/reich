@@ -1,41 +1,49 @@
-# Círculo Reich — livro interativo
+# Círculo Reich — livro integral e grupo de estudos
 
-Experiência de leitura e estudo para celular baseada em *Psicologia de Massas do Fascismo*, de Wilhelm Reich.
+Aplicativo de leitura pessoal de *Psicologia de Massas do Fascismo*, Wilhelm Reich, com texto original protegido por senha e atividades interativas.
 
-## Como abrir
+## Situação de privacidade
 
-Ative GitHub Pages em Settings → Pages → Deploy from a branch → main → / (root).
+- Repositório GitHub: **PRIVADO**.
+- Texto original integral fornecido pelo usuário: na branch privada **`conteudo-privado`**, pasta `conteudo/original`. NÃO aponte nenhum site ou GitHub Pages para essa branch.
+- Site: lê **`book.lock`**, que contém apenas bytes cifrados com AES-256-GCM e PBKDF2 (360 mil iterações). Não há texto integral legível em `main`.
+- Senha: **NÃO ESTÁ no código, no site nem nos logs**. É gerada de forma criptograficamente aleatória pela automação e guardada em um artefato privado do GitHub Actions.
+- Leitura: o aplicativo descriptografa na memória do navegador após inserir a senha. A senha não é guardada no dispositivo.
+- As explicações, perguntas e flashcards permanecem separados do original.
 
-Endereço previsto: https://pscfredteixeira.github.io/reich/
+**CUIDADO:** um repositório privado NÃO implica que um site estático publicado esteja privado. O GitHub Pages não deve publicar jamais a branch `conteudo-privado`. A branch `main` contém apenas o pacote cifrado e código do app, podendo ser publicado como site estático sem expor o texto em claro. Para restringir também o acesso à página inteira, coloque Cloudflare Access na frente do site.
 
-No iPhone, abra o endereço no Safari e selecione Compartilhar → Adicionar à Tela de Início.
+## Como obter a senha do livro
+
+1. Acesse a aba **Actions** deste repositório privado.
+2. Abra o fluxo **Preparar livro protegido por senha** e escolha a execução concluída com sucesso.
+3. Na seção **Artifacts**, baixe **`senha-circulo-reich`** (arquivo ZIP).
+4. Abra `senha-circulo-reich.txt` e guarde a senha em um gerenciador seguro. Não envie a senha por chat ou a terceiros.
+5. Abra o site publicado, digite a senha na caixa **Minha biblioteca particular** e escolha **Abrir meu livro**.
+
+**Se a senha for perdida**, execute novamente a ação manualmente em Actions > Preparar livro protegido por senha > Run workflow. Isso substitui `book.lock` por uma nova versão, gerando uma nova senha. Os artefatos de senha têm retenção limitada.
+
+## Para usar no iPhone
+
+Conecte a branch `main` a uma hospedagem estática, como Cloudflare Pages (ou habilite GitHub Pages caso seu plano permita publicação do repositório privado). **Nunca publique o ramo com o texto em claro**. A página publicada pode ser acessível publicamente, mas o livro continuará cifrado. Idealmente também ative login em Cloudflare Access.
+
+No Safari, visite a URL publicada, digite a senha e use **Compartilhar > Adicionar à Tela de Início** para instalar o PWA.
 
 ## Recursos
 
-- **Leitura interativa imediata:** 13 capítulos de explicações autorais baseadas na obra, organizados em seções. Não é transcrição integral.
-- **Pausas para pensar:** perguntas ao longo da leitura e reflexões salvas.
-- **Quizzes:** 26 questões com correção e justificativas.
-- **Flashcards:** 39 cartões com frente, verso e marcação de domínio.
-- **Caderno:** notas por capítulo e trechos destacados no EPUB.
-- **Progresso:** capítulos concluídos, índice e revisão.
-- **Minha edição integral:** importe uma única vez seu EPUB. O livro fica armazenado localmente no navegador para ser reaberto nas visitas seguintes.
-- **Backup:** exportação e importação de anotações e progresso em JSON.
-- **Modo app:** instalável na tela inicial do iPhone, tema claro/escuro e PWA.
+- **Livro integral (13 capítulos):** ao desbloquear, abra qualquer capítulo e expanda **Ler o texto integral original deste capítulo**.
+- **A Clivagem:** na primeira seção comentada, abra **Texto original de Reich nesta seção** para ler o trecho literal.
+- **Grupo de estudos:** texto comentado, conceito, pausas para reflexão e caderno.
+- **26 quizzes e 39 flashcards**, notas por capítulo, progresso de leitura.
+- **Modo claro/noturno e instalação como aplicativo web**.
+- **Opção EPUB local:** alternativa para leitores que não usam o pacote protegido; importar apenas uma vez e continuar no mesmo navegador.
 
-## Direitos autorais e privacidade
+## Criptografia e reconstrução
 
-O texto apresentado automaticamente é material didático autoral, não o livro completo. O repositório é público e não inclui o EPUB ou sua tradução integral. O arquivo pessoal importado fica armazenado **somente no dispositivo**, sem upload ao GitHub. Dados não sincronizam entre dispositivos.
-
-## Tecnologia
-
-HTML, CSS e JavaScript estáticos; ePub.js, IndexedDB, localStorage e manifesto PWA. Não há conta, servidor de dados ou API paga.
+A rotina `scripts/build_locked.py` é executada por `.github/workflows/book-lock.yml`. Ela obtém o texto de `conteudo-privado`, separa os 13 capítulos, gera uma senha aleatória, cifra o conteúdo e publica apenas `book.lock` em `main`. Nunca confirme o arquivo de senha ou os textos de `conteudo-privado` em `main`.
 
 ## Testes
 
-Execute: node --test tests/smoke.test.mjs
+`node --test tests/smoke.test.mjs`
 
-## Ler a redação original dentro do estudo interativo
-
-No **Capítulo I**, abra **Leitura interativa → A clivagem → Texto original de Reich nesta seção**. O aplicativo extrai o conteúdo original, sem parafrasear, diretamente do EPUB que você importou. As análises e perguntas aparecem separadas, logo abaixo. Na aba **Minha edição integral**, também é possível navegar pelas seções reais do sumário.
-
-**Importante:** o GitHub deste projeto é público; por isso o texto do livro não é colocado nos arquivos do repositório. O conteúdo fica apenas no navegador de quem possui e importa a própria edição EPUB.
+**Limite de proteção:** a criptografia protege o livro contra visitantes sem senha. Qualquer pessoa que tenha a senha e acesso ao site conseguirá lê-lo. Não reutilize senhas de outras contas.
