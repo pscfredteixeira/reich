@@ -94,7 +94,14 @@
       const saved=el("div","reading-reflection-save",box.value?"✓ Reflexão guardada":"Anotações salvas automaticamente");
       let delay;
       box.addEventListener("input",()=>{saved.textContent="Salvando…";clearTimeout(delay);delay=setTimeout(()=>{state.reflections=state.reflections||{};state.reflections[key]=box.value;persist();saved.textContent="✓ Reflexão guardada";},260);});
-      pause.append(h,question,box,saved);article.append(pause);
+      const copyDebate=el("button","reading-debate-copy","↗ Copiar pergunta e minha resposta para discutir");
+      copyDebate.type="button";
+      copyDebate.addEventListener("click",async()=>{
+        const message="Grupo de estudos Reich — Capítulo "+formatNumber(s.n)+": "+s.title+"\nSeção: "+section.h+"\nPergunta: "+section.pause+"\nMinha reflexão: "+(box.value.trim()||"(ainda não escrevi)")+"\nVamos debater minha interpretação, identificando a hipótese de Reich, os limites e um contraponto freudiano.";
+        try{await navigator.clipboard.writeText(message);notify("Copiado! Cole na nossa conversa para debatermos.");}
+        catch(e){box.focus();box.select();notify("Não foi possível copiar automaticamente. Selecione o texto e copie.");}
+      });
+      pause.append(h,question,box,saved,copyDebate);article.append(pause);
       panel.append(article);
     });
     const check=el("section","reading-selfcheck");
