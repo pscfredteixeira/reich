@@ -80,3 +80,18 @@ body.dark .reading-small-label{color:#acc5a7}
  .reading-selfcheck{padding:30px 17px}
  .reading-finish{padding:23px 18px}
 }
+
+/* Cartões com memória de revisão */
+.flashcard-progress{font:10px var(--mono);color:#829784;letter-spacing:.08em;margin:15px 0}
+.flashcard{width:100%;min-height:235px;display:flex;flex-direction:column;justify-content:space-between;align-items:center;padding:25px 18px;border:1px solid #a7bfa7;border-radius:13px;background:#e8f0e3;box-shadow:0 7px 17px #324d3512;color:#355445;text-align:center}
+.flashcard:hover{border-color:#7e9e83}
+.flashcard-caption{font:10px var(--mono);letter-spacing:.14em;color:#759079}
+.flashcard-body{font:500 clamp(18px,2vw,24px)/1.55 var(--serif);padding:21px 4px;color:#294c3a}
+.flashcard-tip{font:10px var(--mono);letter-spacing:.04em;color:#7a967d}
+.flashcard-controls{margin-top:16px;display:flex;gap:7px;align-items:center;justify-content:space-between}
+.flashcard-controls button{padding:9px 10px;border:1px solid var(--line);background:var(--paper);border-radius:6px;color:var(--olive);font-size:10px;font-weight:700;line-height:1.3}
+.flashcard-controls .flashcard-know{background:#335a44;border-color:#335a44;color:white}
+.flashcard-reset{background:none;color:var(--muted);border:0;font:10px var(--sans);margin-top:16px;text-decoration:underline}
+body.dark .flashcard{background:#354b3b;color:#d9ecdb}
+body.dark .flashcard-body,body.dark .flashcard-caption,body.dark .flashcard-tip{color:#e1f0d9}
+@media(max-width:650px){.flashcard-controls button{font-size:10px;padding:9px 7px}.flashcard{min-height:210px}}
