@@ -95,3 +95,12 @@ body.dark .reading-small-label{color:#acc5a7}
 body.dark .flashcard{background:#354b3b;color:#d9ecdb}
 body.dark .flashcard-body,body.dark .flashcard-caption,body.dark .flashcard-tip{color:#e1f0d9}
 @media(max-width:650px){.flashcard-controls button{font-size:10px;padding:9px 7px}.flashcard{min-height:210px}}
+
+/* Controles tipográficos da leitura dentro do aplicativo */
+.interactive-settings{display:flex;justify-content:space-between;align-items:center;margin:0 1px 10px;color:var(--muted);font:10px var(--mono);letter-spacing:.08em}
+.interactive-settings>div{display:flex;align-items:center;gap:7px;letter-spacing:0}
+.interactive-settings button{background:var(--paper);border:1px solid var(--line);border-radius:5px;padding:6px 10px;color:var(--olive);font-weight:800}
+.reading-paragraph{font-size:calc(15px * var(--reader-scale,1))}
+.reading-intro{font-size:calc(16px * var(--reader-scale,1))}
+.reading-pause-question{font-size:calc(16px * var(--reader-scale,1))}
+@media(max-width:650px){.reading-paragraph{font-size:calc(16px * var(--reader-scale,1))}}
