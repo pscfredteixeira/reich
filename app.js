@@ -376,6 +376,20 @@
     }
     return fragment;
   }
+  function getLockedSection(chapter,index){
+    const original=window.REICH_FULL_BOOK?.chapters?.[chapter]?.text;
+    if(!original||chapter!==0)return null;
+    const headings=[
+      "A Clivagem",
+      "Estrutura Econômica e Ideológica da Sociedade Alemã entre 1928 e 1933",
+      "Como a Psicologia de Massas Vê o Problema",
+      "A Função Social da Repressão Sexual"
+    ];
+    const positions=headings.map(h=>original.indexOf(h+"\n"));
+    if(positions.some(n=>n<0))return null;
+    const start=positions[index],end=index<headings.length-1?positions[index+1]:original.length;
+    return start===undefined?null:original.slice(start,end).trim();
+  }
   function makeOriginalExcerptControl(chapter,index,label,count){
     const shell=document.createElement("div");shell.className="reading-original";
     const btn=document.createElement("button");btn.type="button";btn.className="reading-original-btn";
@@ -386,9 +400,31 @@
     shell.append(btn,note,content);
     let loaded=false;
     btn.addEventListener("click",async()=>{
+      if(!book && window.REICH_FULL_BOOK){
+        if(loaded){
+          content.hidden=!content.hidden;
+          btn.textContent=content.hidden?"▤ Mostrar texto original de Reich ↘":"▤ Recolher texto original de Reich ↑";
+          return;
+        }
+        const passage=getLockedSection(chapter,index);
+        if(passage){
+          content.textContent=passage;
+          content.style.whiteSpace="pre-wrap";
+          content.hidden=false;loaded=true;
+          btn.textContent="▤ Recolher texto original de Reich ↑";
+          note.textContent="Palavras exatas de Reich, provenientes do livro cifrado. As perguntas permanecem fora desta caixa.";
+        }else{
+          const whole=document.querySelector(".reading-full-chapter");
+          if(whole){whole.open=true;whole.scrollIntoView({behavior:"smooth",block:"start"});}
+          else notify("Abra o texto integral original acima.");
+        }
+        return;
+      }
       if(!book){
-        notify("Importe seu EPUB: o aplicativo nunca publica o livro no repositório.");
-        $("epubInput").click();return;
+        notify("Desbloqueie sua biblioteca com a senha, ou importe o EPUB localmente.");
+        const lock=$("lockArea");if(lock && !lock.hidden)lock.scrollIntoView({behavior:"smooth"});
+        else $("epubInput").click();
+        return;
       }
       const ref=getOriginalRef(chapter,index,label,count);
       if(!ref){
