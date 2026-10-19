@@ -79,3 +79,14 @@ test("Releitura pessoal mantém separação entre conteúdo público e EPUB", ()
   assert.ok(src.includes('renderFlashcards()'));
   assert.ok(!read("index.html").includes('book-data.js'));
 });
+
+test("O texto original é carregado do EPUB do usuário, não do código do site", () => {
+  const app=read("app.js");
+  const html=read("index.html");
+  assert.ok(app.includes("function extractOriginalSection("));
+  assert.ok(app.includes("section.load(book.load.bind(book))"));
+  assert.ok(app.includes("function makeOriginalExcerptControl("));
+  assert.ok(app.includes("function renderOriginalSections("));
+  assert.ok(html.includes('id="originalSectionLinks"'));
+  assert.ok(app.includes("A fonte e cada parágrafo são preservados"));
+});
