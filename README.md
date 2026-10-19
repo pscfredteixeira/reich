@@ -47,3 +47,16 @@ A rotina `scripts/build_locked.py` é executada por `.github/workflows/book-lock
 `node --test tests/smoke.test.mjs`
 
 **Limite de proteção:** a criptografia protege o livro contra visitantes sem senha. Qualquer pessoa que tenha a senha e acesso ao site conseguirá lê-lo. Não reutilize senhas de outras contas.
+
+
+## Publicação controlada no Cloudflare Pages (iPhone)
+
+1. Abra https://dash.cloudflare.com/ e entre em **Workers & Pages**.
+2. Crie um projeto **Pages** via conexão ao GitHub e autorize **apenas** o repositório privado `pscfredteixeira/reich`.
+3. Selecione **Production branch: `main`**. Em **Build settings**, escolha **Framework preset: None**.
+4. Preencha **Build command: `bash scripts/build-pages.sh`** e **Build output directory: `dist`**. A raiz do repositório não deve ser publicada.
+5. Após criar o projeto, vá a **Settings → Builds → Branch control** e desative a implantação automática de branches de pré-visualização (Preview branch: None/Disable automatic branch deployments). Especialmente **NÃO publicar a branch `conteudo-privado`**, pois contém texto legível.
+6. Antes de compartilhar um link, habilite uma camada de acesso autenticado (Cloudflare Access) para permitir somente seu e-mail. A senha `senha-circulo-reich` continua sendo necessária para descriptografar o texto na página.
+7. Teste em Safari no iPhone e escolha **Compartilhar → Adicionar à Tela de Início**.
+
+O script `scripts/build-pages.sh` copia apenas arquivos explicitamente autorizados e `book.lock` criptografado para a pasta `dist`. Não publique `/ (root)` diretamente.
