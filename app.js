@@ -308,6 +308,8 @@
   }
   function applyFont(){
     $("fontLabel").textContent=state.font+"%";
+    $("interactiveFontLabel").textContent=state.font+"%";
+    document.documentElement.style.setProperty("--reader-scale",String(state.font/100));
     if(rendition)try{rendition.themes.fontSize(state.font+"%");}catch(e){}
     persist();
   }
@@ -399,6 +401,8 @@
     document.querySelectorAll(".tab").forEach(b=>b.addEventListener("click",()=>setTab(b.dataset.tab)));
     $("lightMode").addEventListener("click",()=>{state.theme="light";applyTheme();});
     $("darkMode").addEventListener("click",()=>{state.theme="dark";applyTheme();});
+    $("readerFontMinus").addEventListener("click",()=>{state.font=Math.max(85,state.font-5);applyFont();});
+    $("readerFontPlus").addEventListener("click",()=>{state.font=Math.min(145,state.font+5);applyFont();});
     $("fontMinus").addEventListener("click",()=>{state.font=Math.max(85,state.font-5);applyFont();});
     $("fontPlus").addEventListener("click",()=>{state.font=Math.min(145,state.font+5);applyFont();});
     $("exportBtn").addEventListener("click",exportData);
