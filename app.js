@@ -65,6 +65,13 @@
     cover.append(note);
     panel.append(cover);
     const unlocked=window.REICH_FULL_BOOK && window.REICH_FULL_BOOK.chapters[state.chapter];
+    if(unlocked && state.chapter===0 && window.REICH_FULL_BOOK.frontMatter){
+      const pref=el("details","reading-full-chapter");
+      pref.append(el("summary","","▤  Apresentação, prefácios e textos preliminares da edição"));
+      pref.append(el("p","reading-full-label","TEXTO ORIGINAL DA EDIÇÃO FORNECIDA"));
+      pref.append(el("div","reading-full-text",window.REICH_FULL_BOOK.frontMatter));
+      panel.append(pref);
+    }
     if(unlocked){
       const whole=el("details","reading-full-chapter");
       whole.append(el("summary","","▤  Ler o texto integral original deste capítulo"));
@@ -72,6 +79,12 @@
       const body=el("div","reading-full-text",unlocked.text);
       whole.append(source,body);
       panel.append(whole);
+      if(state.chapter===12 && window.REICH_FULL_BOOK.backMatter){
+        const back=el("details","reading-full-chapter");
+        back.append(el("summary","","▤  Materiais finais e índice original da edição"));
+        back.append(el("div","reading-full-text",window.REICH_FULL_BOOK.backMatter));
+        panel.append(back);
+      }
     }else{
       const msg=el("div","reading-unlock-note","▣ O texto integral está protegido por senha. Use “Minha biblioteca particular” acima para desbloqueá-lo. Nossas interpretações seguem disponíveis abaixo.");
       panel.append(msg);
