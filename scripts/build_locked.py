@@ -32,7 +32,7 @@ for i,m in enumerate(real):
     if len(section)<1000: raise SystemExit("Capítulo de comprimento inesperado.")
     chapters.append({"n":i+1,"title":m.group(2).strip(),"text":section})
 
-payload={"title":"Psicologia de Massas do Fascismo","author":"Wilhelm Reich","source":"Edição fornecida pelo usuário","chapters":chapters}
+payload={"title":"Psicologia de Massas do Fascismo","author":"Wilhelm Reich","source":"Edição fornecida pelo usuário","frontMatter":text[:matches[0].start()],"chapters":chapters,"backMatter":text[matches[13].start():] if len(matches)>13 else ""}
 plain=json.dumps(payload,ensure_ascii=False,separators=(",",":")).encode("utf-8")
 
 password=secrets.token_urlsafe(25)
