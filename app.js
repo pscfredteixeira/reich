@@ -9,7 +9,7 @@
   const defaults = {theme:"light",font:100,chapter:0,mode:"interactive",reflections:{},cards:{},completed:{},notes:{},answers:{},highlights:[],cfi:null,seen:false,filename:null};
   let state = loadState();
   let currentCard = 0, cardFlipped = false;
-  let book = null, rendition = null, chapterHrefs = [], chapterSpines = [], toc = [], bookPercent = 0, noteTimer = 0, toastTimer = 0, resizing = 0, restoring = false;
+  let book = null, rendition = null, chapterHrefs = [], chapterSpines = [], chapterSections = [], toc = [], bookPercent = 0, noteTimer = 0, toastTimer = 0, resizing = 0, restoring = false;
   function loadState(){try{return Object.assign({},defaults,JSON.parse(localStorage.getItem(KEY)||"{}"));}catch(e){return Object.assign({},defaults);}}
   function persist(){try{localStorage.setItem(KEY,JSON.stringify(state));}catch(e){notify("O navegador está sem espaço para guardar as notas.");}}
   function notify(msg){const t=$("toast");t.textContent=msg;t.classList.add("visible");clearTimeout(toastTimer);toastTimer=setTimeout(()=>t.classList.remove("visible"),3600);}
@@ -61,7 +61,7 @@
     cover.append(el("div","reading-kicker","CÍRCULO REICH / CAPÍTULO "+formatNumber(s.n)));
     cover.append(el("h1","reading-title",s.title));
     cover.append(el("p","reading-intro",s.intro));
-    const note=el("div","reading-source","Leitura comentada original baseada nas ideias de Reich. Não é transcrição da obra. Sua edição integral pode ser aberta na aba ao lado.");
+    const note=el("div","reading-source","Os parágrafos comentados são nossos. Para ler as palavras exatas de Reich, abra «Texto original de Reich» dentro de cada seção após importar seu EPUB.");
     cover.append(note);
     panel.append(cover);
     const mini=el("nav","reading-minitoc");mini.setAttribute("aria-label","Seções deste capítulo");
@@ -77,6 +77,7 @@
       article.append(el("div","reading-section-tag",section.tag));
       article.append(el("h2","reading-section-title",section.h));
       for(const p of section.p)article.append(el("p","reading-paragraph",p));
+      article.append(makeOriginalExcerptControl(state.chapter,i,section.h,s.sections.length));
       const c=studies[state.chapter]?.concepts?.[i%3];
       if(c){
         const details=el("details","reading-concept");
@@ -168,7 +169,7 @@
     });
     $("chapterNotes").value=state.notes[s.id]||"";
     $("saveStatus").textContent="Salvo automaticamente no navegador";
-    renderQuizzes();currentCard=0;cardFlipped=false;renderFlashcards();renderHighlights();renderComplete();renderNav();
+    renderQuizzes();currentCard=0;cardFlipped=false;renderFlashcards();renderHighlights();renderOriginalSections();renderComplete();renderNav();
     $("prevChapter").disabled=state.chapter===0;
     $("nextChapter").disabled=state.chapter===studies.length-1;
   }
@@ -270,11 +271,137 @@
   }
   function mapChapters(){
     const flat=flattenToc(toc,0,[]);
-    const main=flat.filter(x=>/^cap[ií]tulo\s+[ivxlcdm0-9]+\b/i.test(x.label.trim()));
+    const main=flat.filter(x=>x.depth===0 && /^cap[ií]tulo\s+[ivxlcdm0-9]+\b/i.test(x.label.trim()));
     chapterHrefs=studies.map((s,i)=>main[i]?.href||null);
     chapterSpines=chapterHrefs.map(h=>{try{const sp=book.spine.get(h?.split("#")[0]);return sp?sp.index:NaN;}catch(e){return NaN;}});
-    // O índice do EPUB que estamos estudando possui 13 capítulos; o texto nunca é extraído para o servidor.
-    if(main.length!==13)notify("Índice diferente da edição de referência. O guia permanece disponível.");
+    chapterSections=studies.map((study,i)=>{
+      const heading=main[i];if(!heading)return [];
+      const start=flat.indexOf(heading),found=[];
+      for(let p=start+1;p<flat.length && flat[p].depth>heading.depth;p++){
+        if(flat[p].depth===heading.depth+1 && flat[p].href)found.push(flat[p]);
+      }
+      return found.length?found:[{label:"Ler o capítulo original",href:heading.href,depth:0}];
+    });
+    if(main.length!==13)notify("Esta edição possui índice diferente: verifique os títulos no índice do EPUB.");
+  }
+  function renderOriginalSections(){
+    const host=$("originalSectionLinks"),hint=$("originalSectionHint");
+    if(!host||!hint)return;
+    host.textContent="";
+    const sections=chapterSections[state.chapter]||[];
+    if(!book || !sections.length){
+      const b=document.createElement("button");b.type="button";b.className="original-link primary-original";
+      b.textContent="↥ Importar meu EPUB para ler o texto exato";
+      b.addEventListener("click",()=>$("epubInput").click());host.append(b);
+      hint.textContent="O texto original é carregado somente do seu arquivo, neste dispositivo.";
+      return;
+    }
+    sections.forEach((item,i)=>{
+      const b=document.createElement("button");b.type="button";b.className="original-link";
+      const n=document.createElement("span");n.className="original-num";n.textContent=formatNumber(i+1);
+      const label=document.createElement("span");label.className="original-text";label.textContent=item.label;
+      const arrow=document.createElement("span");arrow.className="original-arrow";arrow.textContent="↗";
+      b.append(n,label,arrow);
+      b.addEventListener("click",async()=>{
+        if(!rendition)return notify("Importe o EPUB para ler o texto original.");
+        try{
+          setReadingMode("original");
+          await rendition.display(item.href);
+          $("readerCaption").textContent="TEXTO ORIGINAL · "+item.label.toUpperCase();
+          host.querySelectorAll(".original-link").forEach(link=>link.classList.remove("selected"));
+          b.classList.add("selected");
+          if(window.innerWidth<990)document.querySelector(".reader-main").scrollIntoView({behavior:"smooth",block:"start"});
+        }catch(e){notify("Não foi possível abrir esta seção. Consulte o Índice original.");}
+      });
+      host.append(b);
+    });
+    hint.textContent="Este conteúdo vem literalmente do seu EPUB. Nenhum trecho integral está publicado no GitHub.";
+  }
+  function canonicalLabel(label){
+    return String(label).toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/[^a-z0-9 ]+/g," ").replace(/\s+/g," ").trim();
+  }
+  function getOriginalRef(chapter,index,label,count){
+    const refs=chapterSections[chapter]||[];
+    if(!refs.length)return null;
+    if(refs.length===count)return refs[index]||null;
+    const exact=refs.find(r=>canonicalLabel(r.label)===canonicalLabel(label));
+    return exact||null;
+  }
+  function cleanEpubNode(src){
+    if(src.nodeType===3)return document.createTextNode(src.nodeValue);
+    if(src.nodeType!==1)return null;
+    const tag=(src.localName||"").toLowerCase();
+    if(["script","style","iframe","object","form","input","button","svg","video","audio","meta","link"].includes(tag))return null;
+    const allowed=new Set(["p","blockquote","ul","ol","li","table","thead","tbody","tfoot","tr","th","td","b","strong","i","em","u","small","sup","sub","br","hr","h1","h2","h3","h4","h5","h6","span"]);
+    const clone=allowed.has(tag)?document.createElement(tag):document.createDocumentFragment();
+    for(const child of Array.from(src.childNodes)){
+      const safe=cleanEpubNode(child);if(safe)clone.appendChild(safe);
+    }
+    return clone;
+  }
+  async function extractOriginalSection(href){
+    if(!book)throw new Error("É preciso importar o seu EPUB primeiro.");
+    const [path,anchor]=href.split("#");
+    const section=book.spine.get(path);
+    if(!section)throw new Error("Seção não encontrada no EPUB importado.");
+    const dom=await section.load(book.load.bind(book));
+    const src=section.document || dom.ownerDocument || dom;
+    const body=src.querySelector?.("body") || src.getElementsByTagName?.("body")?.[0];
+    if(!body)throw new Error("Este EPUB não forneceu conteúdo legível para a seção.");
+    const children=Array.from(body.children);
+    let start=0;
+    if(anchor){
+      let node=src.getElementById(decodeURIComponent(anchor));
+      if(!node)throw new Error("O marcador desta seção não foi encontrado.");
+      while(node.parentElement && node.parentElement!==body)node=node.parentElement;
+      const ix=children.indexOf(node);
+      if(ix>=0)start=ix;
+    }
+    const fragment=document.createDocumentFragment();
+    // A fonte e cada parágrafo são preservados, sem copiar ou parafrasear palavras.
+    for(const child of children.slice(start)){
+      const safe=cleanEpubNode(child);if(safe)fragment.appendChild(safe);
+    }
+    return fragment;
+  }
+  function makeOriginalExcerptControl(chapter,index,label,count){
+    const shell=document.createElement("div");shell.className="reading-original";
+    const btn=document.createElement("button");btn.type="button";btn.className="reading-original-btn";
+    btn.textContent="▤ Texto original de Reich nesta seção ↘";
+    const note=document.createElement("p");note.className="reading-original-note";
+    note.textContent="Ao abrir, as palavras aparecem diretamente do seu EPUB, sem adaptações.";
+    const content=document.createElement("div");content.className="reading-original-text";content.hidden=true;
+    shell.append(btn,note,content);
+    let loaded=false;
+    btn.addEventListener("click",async()=>{
+      if(!book){
+        notify("Importe seu EPUB: o aplicativo nunca publica o livro no repositório.");
+        $("epubInput").click();return;
+      }
+      const ref=getOriginalRef(chapter,index,label,count);
+      if(!ref){
+        setReadingMode("original");
+        await rendition.display(chapterHrefs[chapter]).catch(()=>{});
+        notify("Esta subdivisão é nossa, não existe no sumário de Reich. O livro original foi aberto ao lado.");
+        return;
+      }
+      if(loaded){
+        content.hidden=!content.hidden;btn.textContent=content.hidden?"▤ Mostrar texto original de Reich ↘":"▤ Recolher texto original de Reich ↑";return;
+      }
+      btn.disabled=true;btn.textContent="Carregando o texto original…";
+      try{
+        const frag=await extractOriginalSection(ref.href);
+        content.replaceChildren(frag);
+        if(!content.textContent.trim())throw new Error("O trecho estava vazio.");
+        content.hidden=false;loaded=true;
+        btn.textContent="▤ Recolher texto original de Reich ↑";
+        note.textContent="Trecho da edição que você importou · «"+ref.label+"». Comentários e perguntas aparecem fora desta caixa.";
+      }catch(e){
+        btn.textContent="▤ Tentar abrir o texto original ↘";
+        notify(e.message||"Não foi possível extrair este trecho do EPUB.");
+      }finally{btn.disabled=false;}
+    });
+    return shell;
   }
   function rememberLocation(loc){
     if(!loc||!loc.start)return;
