@@ -1,23 +1,35 @@
-# Círculo Reich
+# Círculo Reich — livro interativo
 
-Leitor EPUB interativo e caderno de estudos sobre *Psicologia de Massas do Fascismo*, de Wilhelm Reich.
+Experiência de leitura e estudo para celular baseada em *Psicologia de Massas do Fascismo*, de Wilhelm Reich.
 
 ## Como abrir
 
-O projeto funciona como site estático: publique em **Settings → Pages → Deploy from a branch → main → / (root)**. Depois acesse `https://pscfredteixeira.github.io/reich/`.
+Ative GitHub Pages em Settings → Pages → Deploy from a branch → main → / (root).
 
-Clique em **Importar EPUB** e selecione o livro no seu dispositivo. O EPUB não é enviado ao GitHub nem a outros servidores. Ele fica guardado no próprio navegador por meio de IndexedDB.
+Endereço previsto: https://pscfredteixeira.github.io/reich/
 
-## O que tem
+No iPhone, abra o endereço no Safari e selecione Compartilhar → Adicionar à Tela de Início.
 
-- Leitura integral do EPUB importado; índice de capítulos e seções; navegação por páginas.
-- Controle de fonte e modo claro/escuro, progresso salvo, continuação da leitura.
-- Explicações autorais interativas para os 13 capítulos, conceitos, questões para debate e quizzes.
-- Trechos destacados, anotações pessoais, caderno por capítulo e exportação/importação dos estudos em JSON.
-- Layout responsivo para desktop e celular.
+## Recursos
 
-## Tecnologia e direitos autorais
+- **Leitura interativa imediata:** 13 capítulos de explicações autorais baseadas na obra, organizados em seções. Não é transcrição integral.
+- **Pausas para pensar:** perguntas ao longo da leitura e reflexões salvas.
+- **Quizzes:** 26 questões com correção e justificativas.
+- **Flashcards:** 39 cartões com frente, verso e marcação de domínio.
+- **Caderno:** notas por capítulo e trechos destacados no EPUB.
+- **Progresso:** capítulos concluídos, índice e revisão.
+- **Minha edição integral:** importe uma única vez seu EPUB. O livro fica armazenado localmente no navegador para ser reaberto nas visitas seguintes.
+- **Backup:** exportação e importação de anotações e progresso em JSON.
+- **Modo app:** instalável na tela inicial do iPhone, tema claro/escuro e PWA.
 
-HTML, CSS, JavaScript e [ePub.js 0.3.93](https://www.npmjs.com/package/epubjs) (carregado por CDN). O aplicativo não inclui texto protegido por direitos autorais nem disponibiliza o EPUB publicamente. A leitura acontece apenas no navegador de quem importou seu próprio arquivo.
+## Direitos autorais e privacidade
 
-**Atenção:** dados não sincronizam entre dispositivos. Use o botão **Exportar dados** para fazer backup das suas notas.
+O texto apresentado automaticamente é material didático autoral, não o livro completo. O repositório é público e não inclui o EPUB ou sua tradução integral. O arquivo pessoal importado fica armazenado **somente no dispositivo**, sem upload ao GitHub. Dados não sincronizam entre dispositivos.
+
+## Tecnologia
+
+HTML, CSS e JavaScript estáticos; ePub.js, IndexedDB, localStorage e manifesto PWA. Não há conta, servidor de dados ou API paga.
+
+## Testes
+
+Execute: node --test tests/smoke.test.mjs
