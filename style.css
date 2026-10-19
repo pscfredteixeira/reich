@@ -139,3 +139,25 @@ body.dark .original-panel,body.dark .reading-original-btn{background:#344d3d}
 body.dark .original-link{background:#26352e}
 body.dark .reading-original-text{background:#26352e}
 @media(max-width:650px){.reading-original-text{padding:16px 14px;font-size:15px}.original-panel{padding:13px}}
+
+
+/* Biblioteca particular cifrada: nenhum conteúdo original é enviado ao servidor */
+.lock-area{background:var(--soft);border-bottom:1px solid var(--line);padding:15px 34px;display:flex;align-items:center;gap:24px;flex-wrap:wrap}
+.lock-top{display:flex;align-items:center;gap:13px;flex:1;min-width:235px}
+.lock-icon{color:var(--olive);font-size:24px}
+.lock-top strong{display:block;color:var(--olive);font-size:12px}
+.lock-top p{margin:4px 0;color:var(--muted);font-size:11px;line-height:1.5}
+.unlock-form{flex:1;max-width:440px}
+.unlock-form label{display:block;color:var(--olive);font-size:10px;font-weight:700;margin-bottom:5px}
+.unlock-row{display:flex;gap:7px}
+.unlock-row input{border:1px solid var(--line);border-radius:5px;padding:11px 12px;min-width:0;flex:1;background:var(--paper);color:var(--ink);font-size:12px}
+.unlock-row button{border:0;border-radius:5px;padding:11px 15px;background:var(--olive);color:var(--paper);font-size:11px;font-weight:700}
+#lockError{font-size:11px;color:#ab3636;margin:5px 0}
+.lock-reset{background:none;border:1px solid var(--olive);color:var(--olive);padding:10px 13px;border-radius:5px;font-size:11px}
+.reading-full-chapter{border:1px solid #809a83;background:var(--paper);border-radius:9px;margin:19px 0 29px;overflow:hidden}
+.reading-full-chapter>summary{padding:17px 19px;background:var(--soft);cursor:pointer;font-size:13px;font-weight:800;color:var(--olive)}
+.reading-full-label{font:10px var(--mono);letter-spacing:.08em;color:var(--muted);margin:20px 22px}
+.reading-full-text{white-space:pre-wrap;overflow-wrap:anywhere;padding:6px 22px 28px;font:400 16px/1.85 Georgia,serif;color:var(--ink)}
+.reading-unlock-note{background:var(--soft);border-left:3px solid var(--gold);padding:15px 17px;color:var(--olive);font-size:11px;line-height:1.75;margin-bottom:20px}
+body.dark .lock-area,body.dark .reading-full-chapter>summary{background:#31493c}
+@media(max-width:650px){.lock-area{padding:13px 15px;gap:10px}.unlock-form{max-width:100%}.unlock-row button{padding:9px}.reading-full-text{padding:5px 13px 20px;font-size:15px}.reading-full-label{margin:15px}}
