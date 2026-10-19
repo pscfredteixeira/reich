@@ -33,3 +33,9 @@ HTML, CSS e JavaScript estáticos; ePub.js, IndexedDB, localStorage e manifesto 
 ## Testes
 
 Execute: node --test tests/smoke.test.mjs
+
+## Ler a redação original dentro do estudo interativo
+
+No **Capítulo I**, abra **Leitura interativa → A clivagem → Texto original de Reich nesta seção**. O aplicativo extrai o conteúdo original, sem parafrasear, diretamente do EPUB que você importou. As análises e perguntas aparecem separadas, logo abaixo. Na aba **Minha edição integral**, também é possível navegar pelas seções reais do sumário.
+
+**Importante:** o GitHub deste projeto é público; por isso o texto do livro não é colocado nos arquivos do repositório. O conteúdo fica apenas no navegador de quem possui e importa a própria edição EPUB.
