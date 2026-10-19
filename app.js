@@ -64,6 +64,18 @@
     const note=el("div","reading-source","Os parágrafos comentados são nossos. Para ler as palavras exatas de Reich, abra «Texto original de Reich» dentro de cada seção após importar seu EPUB.");
     cover.append(note);
     panel.append(cover);
+    const unlocked=window.REICH_FULL_BOOK && window.REICH_FULL_BOOK.chapters[state.chapter];
+    if(unlocked){
+      const whole=el("details","reading-full-chapter");
+      whole.append(el("summary","","▤  Ler o texto integral original deste capítulo"));
+      const source=el("p","reading-full-label","TEXTO LITERAL DA EDIÇÃO ENVIADA · SEM ALTERAÇÕES");
+      const body=el("div","reading-full-text",unlocked.text);
+      whole.append(source,body);
+      panel.append(whole);
+    }else{
+      const msg=el("div","reading-unlock-note","▣ O texto integral está protegido por senha. Use “Minha biblioteca particular” acima para desbloqueá-lo. Nossas interpretações seguem disponíveis abaixo.");
+      panel.append(msg);
+    }
     const mini=el("nav","reading-minitoc");mini.setAttribute("aria-label","Seções deste capítulo");
     mini.append(el("div","reading-small-label","NESTE CAPÍTULO"));
     s.sections.forEach((section,i)=>{
@@ -553,6 +565,13 @@
       if(bytes){await bootReader(bytes,true);$("importBtnText").textContent="Trocar EPUB";}
     }catch(e){if(state.seen)notify("Importe seu EPUB para retomar a leitura.");}
   }
+  window.addEventListener("reich-unlocked",()=>{
+    renderGuide();
+    if(window.REICH_FULL_BOOK){
+      if(!state.seen){showReader();setReadingMode("interactive");}
+      notify("Seu livro integral está desbloqueado. Abra o texto original de qualquer capítulo.");
+    }else notify("Conteúdo bloqueado. Insira sua senha para ler novamente.");
+  });
   if ('serviceWorker' in navigator && location.protocol==='https:') {
     window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js').catch(()=>{}));
   }
